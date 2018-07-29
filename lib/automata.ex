@@ -22,6 +22,7 @@ defmodule Automata do
               state = Agent.get(:automata_state, &((&1[:state])))
               state_from = unquote("#{transition[:from]}")
               state_to = unquote("#{transition[:to]}")
+              # todo: add guard function and life-cycle events list callbacks
 
               if state == state_from do
                 Agent.update(:automata_state, &(%{&1 | state: state_to}))
