@@ -1,5 +1,15 @@
 defmodule Automata do
-  def factory(config) do
+  use Agent
+
+  def start_link(_opts) do
+    Agent.start_link(fn -> %{} end, name: :automata_store)
+  end
+
+  def fetch(name) do
+    Agent.get(:automata_store, &(&1[name]))
+  end
+
+  defp builder(config) do
     init_state = config[:init]
     transitions = config[:transitions]
 
@@ -41,6 +51,16 @@ defmodule Automata do
 
     {{_, state_machine, _, _}, _} = Code.eval_quoted module, [transitions: transitions], __ENV__
     state_machine.start_link(%{state: init_state})
+    state_machine
+  end
+
+  def factory(config) do
+    builder(config)
+  end
+
+  def factory(config, name) do
+    state_machine = builder(config)
+    Agent.update(:automata_store, fn(store) -> Map.put(store, name, state_machine) end)
     state_machine
   end
 end
