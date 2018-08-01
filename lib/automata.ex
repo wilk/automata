@@ -10,7 +10,8 @@ defmodule Automata do
   end
 
   defp builder(config) do
-    init_state = config[:init]
+    init_state = config[:init_state]
+    init_data = config[:init_data]
     transitions = config[:transitions]
 
     module = quote do
@@ -28,15 +29,24 @@ defmodule Automata do
         var!(transitions) |> Enum.each(fn(transition) ->
           method = quote do
             transition = var!(transition)
-            def unquote(:"#{transition[:name]}")() do
-              state = Agent.get(:automata_state, &((&1[:state])))
+            def unquote(:"#{transition[:name]}")(data) do
+              state_machine = Agent.get(:automata_state, &(&1))
               state_from = unquote("#{transition[:from]}")
               state_to = unquote("#{transition[:to]}")
-              # todo: add guard function and life-cycle events list callbacks
 
-              if state == state_from do
-                Agent.update(:automata_state, &(%{&1 | state: state_to}))
-                {:ok, state_to}
+              if state_machine[:state] == state_from do
+                state_guard = transition[:guard]
+                if is_function(state_guard) do
+                  case state_guard(state_machine, state_to, data) do
+                    {:ok, true} -> 
+                      Agent.update(:automata_state, &(%{&1 | state: state_to}))
+                      {:ok, state_to}
+                    {:error, cause} -> {:error, cause}
+                  end
+                else
+                  Agent.update(:automata_state, &(%{&1 | state: state_to}))
+                  {:ok, state_to}
+                end
               else
                 {:error, "Cannot change state from #{state} to #{state_to}"}
               end
@@ -50,7 +60,7 @@ defmodule Automata do
     end
 
     {{_, state_machine, _, _}, _} = Code.eval_quoted module, [transitions: transitions], __ENV__
-    state_machine.start_link(%{state: init_state})
+    state_machine.start_link(%{state: init_state, data: init_data})
     state_machine
   end
 
