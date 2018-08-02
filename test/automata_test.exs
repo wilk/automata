@@ -5,8 +5,8 @@ defmodule AutomataTest do
 
   setup do
     Automata.start_link(nil)
-    machine = Automata.factory(%{
-      init: "solid",
+    {:ok, machine} = Automata.factory(%{
+      init_state: "solid",
       transitions: [
         %{ name: "melt", from: "solid", to: "liquid" },
         %{ name: "freeze", from: "liquid", to: "solid" },
@@ -18,9 +18,43 @@ defmodule AutomataTest do
     {:ok, machine: machine}
   end
 
+  test "It should not create a machine state without an initial state" do
+    result = Automata.factory(%{
+      transitions: [
+        %{ name: "freeze", from: "liquid", to: "solid" },
+        %{ name: "sublimate", from: "solid", to: "gas" }
+      ]
+    })
+
+    assert result == {:error, "init_state field is required and must be a string"}
+  end
+
+  test "It should not create a machine state without transitions" do
+    result = Automata.factory(%{
+      init_state: "solid"
+    })
+
+    assert result == {:error, "transitions field is required and must be a filled list"}
+  end
+
+  test "It should create a state machine with an initial dataset" do
+    my_data = %{something: ["foo", "bar", 10]}
+    {:ok, machine} = Automata.factory(%{
+      init_state: "liquid",
+      init_data: my_data,
+      transitions: [
+        %{ name: "freeze", from: "liquid", to: "solid" },
+        %{ name: "sublimate", from: "solid", to: "gas" }
+      ]
+    })
+
+    # todo: this does not work. it collides with another state machine in memory... damn
+    assert machine.get_data() == my_data
+  end
+
   test "It should change state from solid to gas on a different machine" do
-    machine = Automata.factory(%{
-      init: "liquid",
+    {:ok, machine} = Automata.factory(%{
+      init_state: "liquid",
       transitions: [
         %{ name: "freeze", from: "liquid", to: "solid" },
         %{ name: "sublimate", from: "solid", to: "gas" }
@@ -77,8 +111,8 @@ defmodule AutomataTest do
   end
 
   test "It should store the machine state with a given name", state do
-    machine = Automata.factory(%{
-      init: "liquid",
+    {:ok, machine} = Automata.factory(%{
+      init_state: "liquid",
       transitions: [
         %{ name: "freeze", from: "liquid", to: "solid" },
         %{ name: "sublimate", from: "solid", to: "gas" }
@@ -88,5 +122,11 @@ defmodule AutomataTest do
     my_machine = Automata.fetch(:my_machine)
 
     assert machine == my_machine
+  end
+
+  test "It should not fetch a machine state not already registered", state do
+    machine = Automata.fetch(:non_existing_machine)
+
+    assert machine == nil
   end
 end
