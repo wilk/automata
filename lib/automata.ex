@@ -16,6 +16,8 @@ defmodule Automata do
     init_state = config[:init_state]
     init_data = config[:init_data]
     transitions = config[:transitions]
+    random_numb = :rand.uniform(100000)
+    module_name = "AutomataStateMachineModule#{random_numb}"
 
     cond do
       !is_bitstring(init_state) or String.length(init_state) == 0 ->
@@ -24,7 +26,7 @@ defmodule Automata do
         {:error, "transitions field is required and must be a filled list"}
       true -> 
         module = quote do
-          defmodule State do
+          defmodule unquote(:"#{module_name}") do
             use Agent
 
             def start_link(store) do

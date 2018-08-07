@@ -67,11 +67,6 @@ defmodule AutomataTest do
     assert machine.get_state() == "gas"
   end
 
-  test "It should be an Automata.State module", state do
-    machine = state[:machine]
-    assert machine == Automata.State
-  end
-
   test "It should start with a solid state", state do
     machine = state[:machine]
     assert machine.get_state() == "solid"
