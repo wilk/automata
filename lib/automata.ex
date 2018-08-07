@@ -16,8 +16,9 @@ defmodule Automata do
     init_state = config[:init_state]
     init_data = config[:init_data]
     transitions = config[:transitions]
-    random_numb = :rand.uniform(100000)
-    module_name = "AutomataStateMachineModule#{random_numb}"
+    random_seed = :rand.uniform(100000)
+    module_name = "AutomataStateMachineModule#{random_seed}"
+    module_state_name = "automata_state_#{random_seed}"
 
     cond do
       !is_bitstring(init_state) or String.length(init_state) == 0 ->
@@ -30,25 +31,23 @@ defmodule Automata do
             use Agent
 
             def start_link(store) do
-              IO.inspect store
-              Agent.start_link(fn -> store end, name: :automata_state)
+              Agent.start_link(fn -> store end, name: unquote(:"#{module_state_name}"))
             end
 
             def get_state() do
-              Agent.get(:automata_state, &((&1[:state])))
+              Agent.get(unquote(:"#{module_state_name}"), &(&1[:state]))
             end
 
             def get_data() do
-              Agent.get(:automata_state, fn(store) -> 
-                IO.inspect(store)
-                store[:data]
-              end)
+              Agent.get(unquote(:"#{module_state_name}"), &(&1[:data]))
             end
 
             var!(transitions) |> Enum.each(fn(transition) ->
+              module_state_name = var!(module_state_name)
               method = quote do
+                module_state_name = var!(module_state_name)
                 def unquote(:"#{transition[:name]}")(data \\ nil) do
-                  state_machine = Agent.get(:automata_state, &(&1))
+                  state_machine = Agent.get(unquote(:"#{module_state_name}"), &(&1))
                   state = state_machine[:state]
                   state_from = unquote("#{transition[:from]}")
                   state_to = unquote("#{transition[:to]}")
@@ -58,12 +57,12 @@ defmodule Automata do
                     if is_function(state_guard) do
                       case state_guard.(state_machine, state_to, data) do
                         {:ok, true} -> 
-                          Agent.update(:automata_state, &(%{&1 | state: state_to}))
+                          Agent.update(unquote(:"#{module_state_name}"), &(%{&1 | state: state_to}))
                           {:ok, state_to}
                         {:error, cause} -> {:error, cause}
                       end
                     else
-                      Agent.update(:automata_state, &(%{&1 | state: state_to}))
+                      Agent.update(unquote(:"#{module_state_name}"), &(%{&1 | state: state_to}))
                       {:ok, state_to}
                     end
                   else
@@ -72,13 +71,13 @@ defmodule Automata do
                 end
               end
 
-              {{method, _}, _} = Code.eval_quoted method, [transition: transition], __ENV__
+              {{method, _}, _} = Code.eval_quoted method, [transition: transition, module_state_name: module_state_name], __ENV__
               method
             end)
           end
         end
 
-        {{_, state_machine, _, _}, _} = Code.eval_quoted module, [transitions: transitions], __ENV__
+        {{_, state_machine, _, _}, _} = Code.eval_quoted module, [transitions: transitions, module_state_name: module_state_name], __ENV__
         state_machine.start_link(%{state: init_state, data: init_data})
         {:ok, state_machine}
     end

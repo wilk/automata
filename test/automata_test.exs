@@ -48,7 +48,6 @@ defmodule AutomataTest do
       ]
     })
 
-    # todo: this does not work. it collides with another state machine in memory... damn
     assert machine.get_data() == my_data
   end
 
@@ -105,7 +104,7 @@ defmodule AutomataTest do
     assert machine.get_state() == "liquid"
   end
 
-  test "It should store the machine state with a given name", state do
+  test "It should store the machine state with a given name" do
     {:ok, machine} = Automata.factory(%{
       init_state: "liquid",
       transitions: [
@@ -119,7 +118,7 @@ defmodule AutomataTest do
     assert machine == my_machine
   end
 
-  test "It should not fetch a machine state not already registered", state do
+  test "It should not fetch a machine state not already registered" do
     machine = Automata.fetch(:non_existing_machine)
 
     assert machine == nil
