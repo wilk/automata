@@ -3,6 +3,12 @@ defmodule AutomataTest do
   use ExUnit.Case, async: true
   doctest Automata
 
+  def guard(_, _, data) do
+    if not data[:flag] do
+      {:error, "cannot change state"}
+    end
+  end
+
   setup do
     Automata.start_link(nil)
     {:ok, machine} = Automata.factory(%{
@@ -122,5 +128,17 @@ defmodule AutomataTest do
     machine = Automata.fetch(:non_existing_machine)
 
     assert machine == nil
+  end
+
+  test "It should not change state with a blocking guard" do
+    {:ok, machine} = Automata.factory(%{
+      init_state: "liquid",
+      transitions: [
+        %{ name: "freeze", from: "liquid", to: "solid", guard: &AutomataTest.guard/3 },
+        %{ name: "sublimate", from: "solid", to: "gas" }
+      ]
+    })
+
+    assert machine.freeze(%{flag: false}) == {:error, "cannot change state"}
   end
 end

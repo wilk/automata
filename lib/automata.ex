@@ -71,13 +71,13 @@ defmodule Automata do
                 end
               end
 
-              {{method, _}, _} = Code.eval_quoted method, [transition: transition, module_state_name: module_state_name], __ENV__
+              {{method, _}, _} = Code.eval_quoted(method, [transition: transition, module_state_name: module_state_name], __ENV__)
               method
             end)
           end
         end
 
-        {{_, state_machine, _, _}, _} = Code.eval_quoted module, [transitions: transitions, module_state_name: module_state_name], __ENV__
+        {{_, state_machine, _, _}, _} = Code.eval_quoted(module, [transitions: transitions, module_state_name: module_state_name], __ENV__)
         state_machine.start_link(%{state: init_state, data: init_data})
         {:ok, state_machine}
     end
