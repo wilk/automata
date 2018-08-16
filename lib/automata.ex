@@ -55,6 +55,7 @@ defmodule Automata do
                   if state == state_from do
                     state_guard = unquote(transition[:guard])
                     if is_function(state_guard) do
+                      # todo: this does not work as expected
                       case state_guard.(state_machine, state_to, data) do
                         {:ok, true} -> 
                           Agent.update(unquote(:"#{module_state_name}"), &(%{&1 | state: state_to}))
