@@ -1,21 +1,11 @@
-# App
+# Automata
+An experiment used to learn how to build a **[Finite State Machine](https://en.wikipedia.org/wiki/Finite-state_machine)** with **[Elixir](https://elixir-lang.org/)**.
+This is just an experiment, also incomplete, non-working and used solely to learn something new. Please, do not use for production purpose.
 
-**TODO: Add description**
+## How to
+Using `docker` and `docker-compose`:
 
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `app` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:app, "~> 0.1.0"}
-  ]
-end
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/app](https://hexdocs.pm/app).
-
+$ docker-compose run --rm app sh
+$ mix test
+```
