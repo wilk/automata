@@ -9,3 +9,8 @@ Using `docker` and `docker-compose`:
 $ docker-compose run --rm app sh
 $ mix test
 ```
+
+## Related works
+
+1. Machinery: https://github.com/joaomdmoura/machinery
+2. Javascript State Machine: https://github.com/jakesgordon/javascript-state-machine
